@@ -2,9 +2,11 @@
 import sys
 
 #Definitions
-STRING, KEYWORD, WEBPAGE, TEXT, LISTITEM, EOI = 1, 2, 3, 4, 5, 6
+STRING, KEYWORD, WEBPAGE, TEXT, LISTITEM, INVALID, EOI = 1, 2, 3, 4, 5, 6
 LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 DIGITS = "0123456789"
+KEYWORDLIST = ["<body>", "</body>", "<b>" , "</b>" ,"<i>" , "</i>", "<ul>" , "</ul>" , "<li>" , "</li>"] 
+
 
 def typeToString (tp):
     if (tp == STRING): return "String"
@@ -85,6 +87,57 @@ class Lexer:
             return True
         else: return False
 
+class Lexer2:
+   
+    def __init__ (self, s):
+        self.stmt = s
+        self.index = 0
+        self.nextChar()
+
+    def nextToken(self):
+        while True:
+            if self.ch.isdigit() or self.ch.isalpha(): #Creates String tokens
+                string = self.consumeChars(LETTERS+DIGITS)
+                return Token(STRING, string)
+            elif self.ch == "<": #Creates KEYWORD tokens if valid o/w creates INVALID tokens
+                key = self.consumeKey(LETTERS+"/")
+                if key in KEYWORDLIST:
+                    return Token(KEYWORD,key)
+                else:
+                    return Token(INVALID, key)
+            elif self.ch == " ": #Skips over blank spaces
+                self.nextChar()
+            elif self.ch == None: #Checks if there is no more characters left and creates EOI Token
+                return Token(EOI,"")
+            else: #If the character is not a valid characters it creates an INVALID Token
+                return Token(INVALID, self.ch)
+
+    def consumeChars (self, charSet):
+        r = self.ch
+        self.nextChar()
+        while (self.ch in charSet):
+            r = r + self.ch
+            self.nextChar()
+        return r
+
+    def consumeKey(self,set):
+        r = self.ch
+        self.nextChar()
+        while (self.ch != ">" and self.ch in set):
+            r = r + self.ch
+            self.nextChar()
+
+        if self.ch == ">":
+            r = r + self.ch
+            self.nextChar()
+
+        return r
+
+    def nextChar(self):
+        self.ch = self.stmt[self.index] 
+        self.index = self.index + 1
+
+
 #The Parser using Recursive Descent
 class Parser:
     def __init__(self, s):
@@ -143,6 +196,7 @@ while (tk.getTokenType() != EOI):
     print(tk)
     tk = lex.nextToken()
 print("")
+
 print("Testing the lexer: test 2")
 lex = Lexer ("x := 1; y := 2.3; z := x $")
 tk = lex.nextToken()
@@ -150,6 +204,7 @@ while (tk.getTokenType() != EOI):
     print(tk)
     tk = lex.nextToken()
 print("")
+
 print("Testing the lexer: test 3")
 lex = Lexer ("x := 1; y : 2; z := x $")
 tk = lex.nextToken()
@@ -157,6 +212,7 @@ while (tk.getTokenType() != EOI):
     print(tk)
     tk = lex.nextToken()
 print("")
+
 print("Testing the parser: test 1")
 parser = Parser ("x := 1");
 parser.run();
