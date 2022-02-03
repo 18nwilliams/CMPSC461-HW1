@@ -2,7 +2,7 @@
 import sys
 
 #Definitions
-STRING, KEYWORD, WEBPAGE, TEXT, LISTITEM, INVALID, EOI = 1, 2, 3, 4, 5, 6
+STRING, KEYWORD, WEBPAGE, TEXT, LISTITEM, INVALID, EOI = 1, 2, 3, 4, 5, 6, 7 
 LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 DIGITS = "0123456789"
 KEYWORDLIST = ["<body>", "</body>", "<b>" , "</b>" ,"<i>" , "</i>", "<ul>" , "</ul>" , "<li>" , "</li>"] 
@@ -36,58 +36,6 @@ class Token:
             return "invalid"
 
 class Lexer:
-    # stmt is the current statement to perform the lexing;
-    # index is the index of the next char in the statement
-    def __init__ (self, s):
-        self.stmt = s
-        self.index = 0
-        self.nextChar()
-    def nextToken(self):
-        while True:
-            if self.ch.isalpha(): # is a letter
-                id = self.consumeChars(LETTERS+DIGITS)
-                return Token(ID, id)
-            elif self.ch.isdigit():
-                num = self.consumeChars(DIGITS)
-                if self.ch != ".":
-                    return Token(INT, num)
-                num += self.ch
-                self.nextChar()
-                if self.ch.isdigit(): 
-                    num += self.consumeChars(DIGITS)
-                    return Token(FLOAT, num)
-                else: return Token(INVALID, num)
-            elif self.ch==' ': self.nextChar()
-            elif self.ch==';': 
-                self.nextChar()
-                return Token(SEMICOLON, "")
-            elif self.ch==':':
-                self.nextChar()
-                if self.checkChar("="):
-                    return Token(ASSIGNMENTOP, "")
-                else: return Token(INVALID, "")
-            elif self.ch=='$':
-                return Token(EOI,"")
-            else:
-                self.nextChar()
-                return Token(INVALID, self.ch)
-    def nextChar(self):
-        self.ch = self.stmt[self.index] 
-        self.index = self.index + 1
-    def consumeChars (self, charSet):
-        r = self.ch
-        self.nextChar()
-        while (self.ch in charSet):
-            r = r + self.ch
-            self.nextChar()
-        return r
-    def checkChar(self, c):
-        if (self.ch==c):
-            self.nextChar()
-            return True
-        else: return False
-
-class Lexer2:
    
     def __init__ (self, s):
         self.stmt = s
@@ -107,11 +55,11 @@ class Lexer2:
                     return Token(INVALID, key)
             elif self.ch == " ": #Skips over blank spaces
                 self.nextChar()
-            elif self.ch == None: #Checks if there is no more characters left and creates EOI Token
+            elif self.ch == "$": #Checks if there is no more characters left and creates EOI Token
                 return Token(EOI,"")
             else: #If the character is not a valid characters it creates an INVALID Token
                 return Token(INVALID, self.ch)
-
+   
     def consumeChars (self, charSet):
         r = self.ch
         self.nextChar()
@@ -130,7 +78,6 @@ class Lexer2:
         if self.ch == ">":
             r = r + self.ch
             self.nextChar()
-
         return r
 
     def nextChar(self):
@@ -190,7 +137,7 @@ class Parser:
 
 #Test Code
 print("Testing the lexer: test 1")
-lex = Lexer ("x := 1 $")
+lex = Lexer ("<body> google <b><i><b> yahoo</b></i></b></body> $")
 tk = lex.nextToken()
 while (tk.getTokenType() != EOI):
     print(tk)
@@ -198,7 +145,7 @@ while (tk.getTokenType() != EOI):
 print("")
 
 print("Testing the lexer: test 2")
-lex = Lexer ("x := 1; y := 2.3; z := x $")
+lex = Lexer ("<body> google <x><i><b> yahoo</b></i></b></body> $")
 tk = lex.nextToken()
 while (tk.getTokenType() != EOI):
     print(tk)
@@ -206,13 +153,14 @@ while (tk.getTokenType() != EOI):
 print("")
 
 print("Testing the lexer: test 3")
-lex = Lexer ("x := 1; y : 2; z := x $")
+lex = Lexer ("google yahoo $")
 tk = lex.nextToken()
 while (tk.getTokenType() != EOI):
     print(tk)
     tk = lex.nextToken()
 print("")
 
+'''
 print("Testing the parser: test 1")
 parser = Parser ("x := 1");
 parser.run();
@@ -222,3 +170,4 @@ parser.run();
 print("Testing the parser: test 3")
 parser = Parser ("x := 1; y ; 2; z := x");
 parser.run();
+'''
