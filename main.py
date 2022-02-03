@@ -1,4 +1,5 @@
-# Authored by Nathan Williams; npw5145; description of purpose of the file
+# Authored by Nathan Williams; npw5145
+# This file Parses a simplified html language using the recursive descent technique
 
 #Imports
 import sys
@@ -96,68 +97,15 @@ class Lexer:
 
 ##############################################################################################################################################################
 
-# The Parser using Recursive Descent
-class Parser:
-    def __init__(self, s):
-        self.lexer = Lexer(s+"$")
-        self.token = self.lexer.nextToken()
-    def run(self):
-        self.statement()
-
-    def statement(self):
-        print("<Statement>")
-        self.assignmentStmt()
-        while self.token.getTokenType() == SEMICOLON:
-            print("\t<Semicolon>;</Semicolon>")
-            self.token = self.lexer.nextToken()
-            self.assignmentStmt()
-        self.match(EOI)
-        print("</Statement>")
-
-    def assignmentStmt(self):
-        print("\t<Assignment>")
-        val = self.match(ID)
-        print("\t\t<Identifier>" + val + "</Identifier>")
-        self.match(ASSIGNMENTOP)
-        print("\t\t<AssignmentOp>:=</AssignmentOp>")
-        self.expression()
-        print("\t</Assignment>")
-
-    def expression(self):
-        if self.token.getTokenType() == ID:
-            print("\t\t<Identifier>" + self.token.getTokenValue() \
-                   + "</Identifier>")
-        elif self.token.getTokenType() == INT:
-            print("\t\t<Int>" + self.token.getTokenValue() + "</Int>")
-        elif self.token.getTokenType() == FLOAT:
-            print("\t\t<Float>" + self.token.getTokenValue() + "</Float>")
-        else:
-            print("Syntax error: expecting an ID, an int, or a float" \
-                  + "; saw:" \
-                  + typeToString(self.token.getTokenType()))
-            sys.exit(1)
-        self.token = self.lexer.nextToken()
-
-    def match (self, tp):
-        val = self.token.getTokenValue()
-        if (self.token.getTokenType() == tp):
-            self.token = self.lexer.nextToken()
-        else: self.error(tp)
-        return val
-
-    def error(self, tp):
-        print ("Syntax error: expecting: " + typeToString(tp) \
-               + "; saw: " + typeToString(self.token.getTokenType()))
-        sys.exit(1)
-
 #The Parser using Recursive Descent
-class Parser2:
+class Parser:
     def __init__(self, s):
         self.lexer = Lexer(s+"$")
         self.token = self.lexer.nextToken()
     def run(self):
         self.website()
     
+    #Handles parsing of a WEBSITE
     def website(self):
         indent = 0
 
@@ -175,35 +123,35 @@ class Parser2:
 
         self.matchtype(EOI)
 
+    #Handles parsing of a TEXT
     def text(self,indent):
         
-        if self.token.getTokenType() == STRING:
+        if self.token.getTokenType() == STRING: #Handles case where TEXT converts to STRING
             val = self.matchtype(STRING)
             print("\t"*indent + val)
-        elif self.token.getTokenType() == KEYWORD:
-            if self.token.getTokenValue() == "<b>":
-                val = self.matchkey("<b>")
-                print("\t"*indent + val)
-                self.text(indent+1)
-                val = self.matchkey("</b>")
-                print("\t"*indent + val)
-            if  self.token.getTokenValue() == "<i>":
-                val = self.matchkey("<i>")
-                print("\t"*indent + val)
-                self.text(indent+1)
-                val = self.matchkey("</i>")
-                print("\t"*indent + val)
-            elif self.token.getTokenValue() == "<ul>":
-                val = self.matchkey("<ul>")
-                print("\t"*indent + val)
+        elif self.token.getTokenValue() == "<b>": #Handles case where TEXT converts to <b> TEXT </b>
+            val = self.matchkey("<b>")
+            print("\t"*indent + val)
+            self.text(indent+1)
+            val = self.matchkey("</b>")
+            print("\t"*indent + val)
+        if  self.token.getTokenValue() == "<i>": #Handles case where TEXT converts to <i> TEXT </i>
+            val = self.matchkey("<i>")
+            print("\t"*indent + val)
+            self.text(indent+1)
+            val = self.matchkey("</i>")
+            print("\t"*indent + val)
+        elif self.token.getTokenValue() == "<ul>": #Handles case where TEXT converts to <ul> {listitem} </ul>
+            val = self.matchkey("<ul>")
+            print("\t"*indent + val)
 
-                while self.token.getTokenValue() != "</ul>":
-                    self.listitem(indent+1)
+            while self.token.getTokenValue() != "</ul>":
+                self.listitem(indent+1)
 
-                val = self.matchkey("</ul>")
-                print("\t"*indent + val)
+            val = self.matchkey("</ul>")
+            print("\t"*indent + val)
 
-
+    #Handles the parsing of a LISTITEM
     def listitem(self,indent):
         val = self.matchkey("<li>")
         print("\t"*indent + val)
@@ -213,6 +161,7 @@ class Parser2:
         val = self.matchkey("</li>")
         print("\t"*indent + val)
 
+    #Checks token type against the given type, if they don't match it throws an error
     def matchtype (self, tp):
         val = self.token.getTokenValue()
         if (self.token.getTokenType() == tp):
@@ -220,6 +169,7 @@ class Parser2:
         else: self.error(tp)
         return val
 
+    #Checks token value against the given KEYWORD, if they don't match it throws an error
     def matchkey(self, key):
         val = self.token.getTokenValue()
         if (val == key):
@@ -227,6 +177,7 @@ class Parser2:
         else: self.error(key)
         return val
 
+    #Prints error message and exits the program
     def error(self, tp):
         print ("Syntax error: expecting: " + typeToString(tp) \
                + "; saw: " + typeToString(self.token.getTokenType()))
@@ -235,6 +186,7 @@ class Parser2:
 ##############################################################################################################################################################
 
 #Test Code
+'''
 print("Testing the lexer: test 1")
 lex = Lexer ("<body> google <b><i><b> yahoo</b></i></b></body> $")
 tk = lex.nextToken()
@@ -261,13 +213,14 @@ print("")
 
 print("NOW1")
 print("Testing the parser: test 1")
-parser = Parser2 ("<body> google <b><i><b> yahoo</b></i></b></body>")
+parser = Parser("<body> google <b><i><b> yahoo</b></i></b></body>")
+parser.run()
+
+print("Testing the parser: test 3")
+parser = Parser("<body> google <b><i><ul> <li>dfg</li> <li>fghfg</li></ul></i></b></body>")
 parser.run()
 
 print("Testing the parser: test 2")
-#parser = Parser2 ("<body> google <b><i><b> yahoo</b></b></body>")
-#parser.run()
-
-print("Testing the parser: test 3")
-parser = Parser2 ("<body> google <b><i><ul> <li>dfg</li> <li>fghfg</li></ul></i></b></body>")
+parser = Parser("<body> google <b><i><b> yahoo</b></b></body>")
 parser.run()
+'''
