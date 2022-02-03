@@ -37,6 +37,8 @@ class Token:
 
 class Lexer:
    
+    # stmt is the current statement to perform the lexing;
+    # index is the index of the next char in the statement
     def __init__ (self, s):
         self.stmt = s
         self.index = 0
@@ -60,6 +62,7 @@ class Lexer:
             else: #If the character is not a valid characters it creates an INVALID Token
                 return Token(INVALID, self.ch)
    
+    #Moves further along the input, compiling all of the Letters and Digits into a single string variable
     def consumeChars (self, charSet):
         r = self.ch
         self.nextChar()
@@ -68,6 +71,7 @@ class Lexer:
             self.nextChar()
         return r
 
+    #Moves further along the input, compiling all of the letters up to and including the ">" at the end of a keyword into a single string variable
     def consumeKey(self,set):
         r = self.ch
         self.nextChar()
@@ -80,6 +84,7 @@ class Lexer:
             self.nextChar()
         return r
 
+    #Moves self.ch to the next character in the input and increments the self.index counter
     def nextChar(self):
         self.ch = self.stmt[self.index] 
         self.index = self.index + 1
@@ -129,6 +134,60 @@ class Parser:
             self.token = self.lexer.nextToken()
         else: self.error(tp)
         return val
+    def error(self, tp):
+        print ("Syntax error: expecting: " + typeToString(tp) \
+               + "; saw: " + typeToString(self.token.getTokenType()))
+        sys.exit(1)
+
+#The Parser using Recursive Descent
+class Parser2:
+    def __init__(self, s):
+        self.lexer = Lexer(s+"$")
+        self.token = self.lexer.nextToken()
+    def run(self):
+        self.statement()
+
+    def statement(self):
+        print("<Statement>")
+        self.assignmentStmt()
+        while self.token.getTokenType() == SEMICOLON:
+            print("\t<Semicolon>;</Semicolon>")
+            self.token = self.lexer.nextToken()
+            self.assignmentStmt()
+        self.match(EOI)
+        print("</Statement>")
+
+    def assignmentStmt(self):
+        print("\t<Assignment>")
+        val = self.match(ID)
+        print("\t\t<Identifier>" + val + "</Identifier>")
+        self.match(ASSIGNMENTOP)
+        print("\t\t<AssignmentOp>:=</AssignmentOp>")
+        self.expression()
+        print("\t</Assignment>")
+
+    def expression(self):
+        if self.token.getTokenType() == ID:
+            print("\t\t<Identifier>" + self.token.getTokenValue() \
+                   + "</Identifier>")
+        elif self.token.getTokenType() == INT:
+            print("\t\t<Int>" + self.token.getTokenValue() + "</Int>")
+        elif self.token.getTokenType() == FLOAT:
+            print("\t\t<Float>" + self.token.getTokenValue() + "</Float>")
+        else:
+            print("Syntax error: expecting an ID, an int, or a float" \
+                  + "; saw:" \
+                  + typeToString(self.token.getTokenType()))
+            sys.exit(1)
+        self.token = self.lexer.nextToken()
+
+    def match (self, tp):
+        val = self.token.getTokenValue()
+        if (self.token.getTokenType() == tp):
+            self.token = self.lexer.nextToken()
+        else: self.error(tp)
+        return val
+
     def error(self, tp):
         print ("Syntax error: expecting: " + typeToString(tp) \
                + "; saw: " + typeToString(self.token.getTokenType()))
